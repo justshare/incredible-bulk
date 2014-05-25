@@ -1,0 +1,4 @@
+requests
+flask
+-e git://github.com/dryan/twitter-text-py#egg=twitter-text-py
+clint
