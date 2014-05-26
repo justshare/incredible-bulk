@@ -93,7 +93,7 @@ def post_scheduled_message(schedule):
 def bulk_just_share():
   csv_data = read_csv(CSV_FILE)
   data = process_links(csv_data)
-  times = generate_schedule(len(foo), 1*30)
+  times = generate_schedule(len(data), INTERVAL*15)
   schedule = []
   for obj, time in zip(data, times):
     obj['time'] = time
@@ -120,5 +120,6 @@ if __name__ == "__main__":
   PROFILE = data.get('PROFILE')
   CSV_FILE = data.get('CSV_FILE')
   ROOT = data.get('ROOT')
+  INTERVAL = data.get('INTERVAL')
 
   bulk_just_share()
