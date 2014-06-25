@@ -8,6 +8,7 @@ from clint.textui import puts, indent, colored
 
 SHORTEN = 'shorten?url=%s'
 SCHEDULED_POST = 'profile/%s/post/scheduledmessage'
+QUEUED_POST = 'profile/%s/post/qmessage'
 
 INPUT_DIR = '.'
 
@@ -73,6 +74,7 @@ def process_links(msg_list):
     link = short_urls[0] if len(short_urls) > 0 else None
     for a,b in zip(orig_urls, short_urls):
       message = message.decode("utf-8").replace(a, b).encode("utf-8")
+    puts(colored.yellow('INFO: Message: %s (%s)' % (message, len(message))))
     obj = dict(message=message, meta=dict(link=link))
     data.append(obj)
   return data
@@ -82,11 +84,12 @@ def post_scheduled_message(schedule):
   In the absence of a bulk scheduling API, make individual calls to schedule each post
   """
   for post in schedule:
+    msg = post.get('message')
     url = ROOT + SCHEDULED_POST % PROFILE
     headers = {'content-type': 'application/json'}
     r = requests.post(url, data=json.dumps(post), headers=headers)
     if r.status_code == requests.codes.ok:
-      puts(colored.yellow('INFO: Successfully scheduled: %s' % post.get('message')))
+      puts(colored.yellow('INFO: Successfully scheduled: %s (%s)' % (msg, len(msg))))
     else:
       print("ERROR: Scheduling Post Failed - ", r.content, file=sys.stderr)
 
@@ -103,6 +106,33 @@ def bulk_just_share():
   puts(colored.yellow('INFO: Dispatching batch to be scheduled'))
 
   post_scheduled_message(schedule)
+
+
+def post_q_message(schedule):
+  """
+  In the absence of a bulk q API, make individual calls to q each post
+  """
+  for post in schedule:
+    msg = post.get('message')
+    url = ROOT + QUEUED_POST % PROFILE
+    headers = {'content-type': 'application/json'}
+    r = requests.post(url, data=json.dumps(post), headers=headers)
+    if r.status_code == requests.codes.ok:
+      puts(colored.yellow('INFO: Successfully queued: %s (%s)' % (msg, len(msg))))
+    else:
+      print("ERROR: Queued Post Failed - ", r.content, file=sys.stderr)
+
+
+
+def bulk_just_share_q():
+  csv_data = read_csv(CSV_FILE)
+  data = process_links(csv_data)
+
+  puts('INFO: Post schedule that has been generated is %s' % data)
+  puts(colored.yellow('INFO: Dispatching batch to be scheduled'))
+
+  post_q_message(data)
+
 
 if __name__ == "__main__":
   args = arguments.Args()
@@ -122,4 +152,4 @@ if __name__ == "__main__":
   ROOT = data.get('ROOT')
   INTERVAL = data.get('INTERVAL')
 
-  bulk_just_share()
+  bulk_just_share_q()
